@@ -4,13 +4,19 @@ import logging
 import sys
 from dataclasses import asdict
 
-from tgpublic.config import DEFAULT_DOWNLOAD_DIR, DEFAULT_MESSAGE_COUNT
-from tgpublic.logging_config import setup_logging
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+
+from tgpublic.config import DEFAULT_DOWNLOAD_DIR, DEFAULT_MESSAGE_COUNT, ERROR_LOG_FILE
+from tgpublic.display import show_banner, print_error, generate_error_code
+from tgpublic.logging_config import setup_logging, setup_error_logging
 from tgpublic.scraper import TelegramChannelScraper
 
 
 def main():
     setup_logging()
+    setup_error_logging(ERROR_LOG_FILE)
+
+    show_banner()
 
     parser = argparse.ArgumentParser(
         prog="tgpublic",
@@ -62,35 +68,74 @@ def main():
     if args.json:
         _silence_console_logging()
 
-    scraper = TelegramChannelScraper(channel_name=args.channel, output_dir=args.output)
+    try:
+        scraper = TelegramChannelScraper(channel_name=args.channel, output_dir=args.output)
 
-    profile = None
-    if args.download_profile:
-        profile = scraper.download_profile_photo()
+        profile = None
+        if args.download_profile:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            ) as progress:
+                task = progress.add_task("[cyan]Downloading profile photo...", total=None)
+                profile = scraper.download_profile_photo(
+                    progress_callback=lambda d, t: progress.update(task, completed=d, total=t)
+                )
 
-    messages = scraper.get_latest_messages(count=args.num_messages)
+        messages = scraper.get_latest_messages(count=args.num_messages)
 
-    if args.download:
-        scraper.download_message_files(messages)
+        if args.download:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            ) as progress:
+                for msg in messages:
+                    for att in msg.attachments:
+                        task = progress.add_task(
+                            f"[cyan]Downloading {att.filename}", total=None
+                        )
+                        scraper.downloader.download(
+                            att.url,
+                            scraper.output_dir,
+                            filename=att.filename,
+                            progress_callback=lambda d, t, task=task: progress.update(
+                                task, completed=d, total=t
+                            ),
+                        )
 
-    if args.json:
-        output_data = {"messages": [asdict(msg) for msg in messages]}
+        if args.json:
+            output_data = {"messages": [asdict(msg) for msg in messages]}
+            if profile:
+                output_data["profile"] = asdict(profile)
+
+            print(json.dumps(output_data, indent=2, ensure_ascii=False, default=str))
+            return
+
         if profile:
-            output_data["profile"] = asdict(profile)
+            print(f"\n🖼️ عکس پروفایل کانال @{args.channel}:")
+            if profile.local_photo_path:
+                print(f"   ✅ دانلود شد: {profile.local_photo_path}")
+            elif profile.photo_url:
+                print(f"   ⚠️ آدرس پیدا شد اما دانلود ناموفق بود: {profile.photo_url}")
+            else:
+                print("   ❌ عکس پروفایلی یافت نشد.")
 
-        print(json.dumps(output_data, indent=2, ensure_ascii=False, default=str))
-        return
+        scraper.display_messages(messages)
 
-    if profile:
-        print(f"\n🖼️ عکس پروفایل کانال @{args.channel}:")
-        if profile.local_photo_path:
-            print(f"   ✅ دانلود شد: {profile.local_photo_path}")
-        elif profile.photo_url:
-            print(f"   ⚠️ آدرس پیدا شد اما دانلود ناموفق بود: {profile.photo_url}")
-        else:
-            print("   ❌ عکس پروفایلی یافت نشد.")
-
-    scraper.display_messages(messages)
+    except Exception as e:
+        error_code = generate_error_code()
+        logging.getLogger("tgpublic").exception(
+            "Unhandled exception (code: %s)", error_code
+        )
+        print_error(
+            f"خطای غیرمنتظره. برای جزئیات به فایل {ERROR_LOG_FILE} مراجعه کنید.",
+            error_code,
+        )
+        sys.exit(1)
 
 
 def _silence_console_logging():

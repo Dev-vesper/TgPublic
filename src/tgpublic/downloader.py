@@ -2,7 +2,7 @@ import logging
 import re
 import urllib.parse
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 import requests
 
@@ -18,7 +18,11 @@ class FileDownloader:
         self.headers = {"User-Agent": USER_AGENT}
 
     def download(
-        self, url: str, output_dir: str, filename: Optional[str] = None
+        self,
+        url: str,
+        output_dir: str,
+        filename: Optional[str] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> Optional[Path]:
         try:
             response = requests.get(
@@ -41,9 +45,16 @@ class FileDownloader:
 
         try:
             with open(local_path, "wb") as file_handle:
+                total_size = int(response.headers.get("content-length", 0))
+                downloaded = 0
                 for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                     if chunk:
                         file_handle.write(chunk)
+                        downloaded += len(chunk)
+                        if progress_callback and total_size > 0:
+                            progress_callback(downloaded, total_size)
+                if progress_callback and total_size == 0:
+                    progress_callback(downloaded, downloaded)
         except OSError as e:
             logger.error("Failed writing file %s: %s", local_path, e)
             return None

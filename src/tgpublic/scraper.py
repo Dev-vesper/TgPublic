@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from typing import Optional, Callable
 
 import requests
 from bs4 import BeautifulSoup
@@ -40,14 +41,20 @@ class TelegramChannelScraper:
         logger.info("Profile parsed. Photo URL: %s", photo_url)
         return profile
 
-    def download_profile_photo(self) -> ChannelProfile:
+    def download_profile_photo(
+        self,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> ChannelProfile:
         profile = self.get_profile()
         if not profile.photo_url:
             logger.warning("No profile photo URL found for channel @%s", self.channel_name)
             return profile
         logger.info("Downloading profile photo...")
         local_path = self.downloader.download(
-            profile.photo_url, self.output_dir, filename=f"{self.channel_name}_profile.jpg"
+            profile.photo_url,
+            self.output_dir,
+            filename=f"{self.channel_name}_profile.jpg",
+            progress_callback=progress_callback,
         )
         profile.local_photo_path = local_path
         if local_path:
@@ -62,13 +69,20 @@ class TelegramChannelScraper:
         logger.info("Parsed %d messages", len(messages))
         return messages
 
-    def download_message_files(self, messages: list[Message]) -> list[Message]:
+    def download_message_files(
+        self,
+        messages: list[Message],
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> list[Message]:
         logger.info("Starting download of attachments for %d messages", len(messages))
         for message in messages:
             for attachment in message.attachments:
                 logger.info("Downloading attachment: %s", attachment.filename)
                 local_path = self.downloader.download(
-                    attachment.url, self.output_dir, filename=attachment.filename
+                    attachment.url,
+                    self.output_dir,
+                    filename=attachment.filename,
+                    progress_callback=progress_callback,
                 )
                 attachment.local_path = local_path
                 if local_path:
