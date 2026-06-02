@@ -1,6 +1,8 @@
 import logging
 import re
+import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 import requests
 
@@ -15,7 +17,9 @@ class FileDownloader:
     def __init__(self) -> None:
         self.headers = {"User-Agent": USER_AGENT}
 
-    def download(self, url: str, output_dir: str, filename: str | None = None) -> Path | None:
+    def download(
+        self, url: str, output_dir: str, filename: Optional[str] = None
+    ) -> Optional[Path]:
         try:
             response = requests.get(
                 url,
@@ -64,7 +68,7 @@ class FileDownloader:
             return filename
 
         base, ext = Path(filename).stem, Path(filename).suffix
-        ext = ext[:20]  # guard against abnormally long extensions
+        ext = ext[:20]
         keep = MAX_FILENAME_LENGTH - len(ext)
         return base[:keep] + ext
 

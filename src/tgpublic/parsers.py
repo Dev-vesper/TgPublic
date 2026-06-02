@@ -1,13 +1,14 @@
 import re
 import urllib.parse
 from pathlib import Path
+from typing import Optional
 
 from bs4 import BeautifulSoup, Tag
 
 from tgpublic.models import Attachment, Message
 
 
-def parse_profile_photo_url(soup: BeautifulSoup) -> str | None:
+def parse_profile_photo_url(soup: BeautifulSoup) -> Optional[str]:
     meta_tag = soup.find("meta", property="og:image")
     if meta_tag and meta_tag.get("content"):
         return meta_tag["content"]
@@ -56,7 +57,7 @@ def _extract_text(widget: Tag) -> str:
     return ""
 
 
-def _extract_id_and_link(widget: Tag) -> tuple[str | None, str | None]:
+def _extract_id_and_link(widget: Tag) -> tuple[Optional[str], Optional[str]]:
     link_element = widget.find("a", class_="tgme_widget_message_date")
     if not link_element or not link_element.has_attr("href"):
         return None, None
@@ -69,7 +70,7 @@ def _extract_id_and_link(widget: Tag) -> tuple[str | None, str | None]:
     return message_id, full_link
 
 
-def _extract_datetime(widget: Tag) -> str | None:
+def _extract_datetime(widget: Tag) -> Optional[str]:
     time_element = widget.find("time")
     if time_element and time_element.has_attr("datetime"):
         return time_element["datetime"]
