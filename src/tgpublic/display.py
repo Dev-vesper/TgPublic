@@ -1,7 +1,7 @@
 import random
 import string
 
-from big_text import big_text
+from big_text import ascii_art
 from rich.console import Console
 from rich.text import Text
 
@@ -9,7 +9,7 @@ console = Console()
 
 
 def show_banner():
-    banner = big_text("TgPublic")
+    banner = ascii_art("TgPublic")
     console.print(banner, style="bold cyan")
 
 
