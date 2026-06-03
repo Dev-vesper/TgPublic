@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from tgpublic import cli
@@ -14,19 +15,26 @@ def test_silence_console_logging_removes_stdout_handlers_only():
     stdout_handler = logging.StreamHandler(sys.stdout)
     stderr_handler = logging.StreamHandler(sys.stderr)
     
-    with tempfile.NamedTemporaryFile() as tmp:
-        file_handler = logging.FileHandler(tmp.name)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        log_file = Path(tmpdir) / "test.log"
+        file_handler = logging.FileHandler(log_file)
+        
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
         logger.addHandler(file_handler)
-
+        
         with patch("tgpublic.cli.logging.getLogger", return_value=logger):
             cli._silence_console_logging()
-
+        
         remaining_handlers = logger.handlers
         assert stdout_handler not in remaining_handlers
         assert stderr_handler in remaining_handlers
         assert file_handler in remaining_handlers
+        
+        logger.removeHandler(file_handler)
+        file_handler.close()
+        logger.removeHandler(stdout_handler)
+        logger.removeHandler(stderr_handler)
     
     logger.handlers.clear()
 
