@@ -20,6 +20,22 @@ def parse_profile_photo_url(soup: BeautifulSoup) -> Optional[str]:
     return None
 
 
+def parse_member_count(soup: BeautifulSoup) -> Optional[int]:
+    extra_div = soup.find("div", class_="tgme_page_extra")
+    if not extra_div:
+        return None
+
+    text = extra_div.get_text(strip=True)
+    match = re.search(r"([\d,]+)\s*(?:member|subscriber|عضو|members|subscribers)", text, re.IGNORECASE)
+    if match:
+        cleaned = match.group(1).replace(",", "")
+        try:
+            return int(cleaned)
+        except ValueError:
+            return None
+    return None
+
+
 def parse_messages(soup: BeautifulSoup, count: int) -> list[Message]:
     message_widgets = soup.find_all("div", class_="tgme_widget_message")
     if not message_widgets:
@@ -60,23 +76,18 @@ def _extract_text(widget: Tag) -> str:
         parts = []
         for child in element.children:
             if isinstance(child, str):
-                # collapse multiple spaces/tabs in text nodes
                 collapsed = re.sub(r'[ \t]+', ' ', child)
                 parts.append(collapsed)
             elif child.name == 'br':
                 parts.append('\n')
             elif child.name in ['a', 'span', 'strong', 'em']:
-                # recursively extract inside inline tags
                 parts.append(_extract_inner(child))
             else:
-                # other tags: just extract text without adding extra separators
                 parts.append(_extract_inner(child))
         return ''.join(parts)
 
     raw_text = _extract_inner(text_element)
-    # Split by newline to strip per line, then re-join
     lines = [line.strip() for line in raw_text.split('\n')]
-    # Remove empty lines from start/end but keep internal empty lines if any
     while lines and not lines[0]:
         lines.pop(0)
     while lines and not lines[-1]:

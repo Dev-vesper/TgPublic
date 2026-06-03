@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from tgpublic.parsers import parse_messages, parse_profile_photo_url
+from tgpublic.parsers import parse_messages, parse_profile_photo_url, parse_member_count
 
 
 SAMPLE_HTML = """
@@ -126,3 +126,27 @@ def test_parse_message_with_br_tags():
     messages = parse_messages(soup, count=1)
     assert len(messages) == 1
     assert messages[0].text == "ایران عالیه\nنصب کنید"
+
+def test_parse_member_count_with_subscribers():
+    html = '<div class="tgme_page_extra">32 subscribers</div>'
+    soup = BeautifulSoup(html, "lxml")
+    assert parse_member_count(soup) == 32
+
+def test_parse_member_count_with_members():
+    html = '<div class="tgme_page_extra">1,234 members</div>'
+    soup = BeautifulSoup(html, "lxml")
+    assert parse_member_count(soup) == 1234
+
+def test_parse_member_count_with_persian():
+    html = '<div class="tgme_page_extra">۵۰۰ عضو</div>'
+    soup = BeautifulSoup(html, "lxml")
+    assert parse_member_count(soup) == 500
+
+def test_parse_member_count_no_extra():
+    soup = BeautifulSoup("<html></html>", "lxml")
+    assert parse_member_count(soup) is None
+
+def test_parse_member_count_other_text():
+    html = '<div class="tgme_page_extra">Joined December 2020</div>'
+    soup = BeautifulSoup(html, "lxml")
+    assert parse_member_count(soup) is None

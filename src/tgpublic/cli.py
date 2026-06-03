@@ -46,6 +46,16 @@ def main():
         help="دانلود عکس پروفایل کانال",
     )
     parser.add_argument(
+        "--members",
+        action="store_true",
+        help="نمایش تعداد اعضای کانال",
+    )
+    parser.add_argument(
+        "--only_members",
+        action="store_true",
+        help="فقط دریافت تعداد اعضا (بدون دریافت پیام و دانلود)",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         default=DEFAULT_DOWNLOAD_DIR,
@@ -71,6 +81,20 @@ def main():
     try:
         scraper = TelegramChannelScraper(channel_name=args.channel, output_dir=args.output)
 
+        # اگر فقط اعضا خواسته شده
+        if args.only_members:
+            member_count = scraper.get_member_count()
+            if args.json:
+                output_data = {"profile": {"member_count": member_count}}
+                print(json.dumps(output_data, indent=2, ensure_ascii=False))
+            else:
+                if member_count is not None:
+                    print(f"\n👥 تعداد اعضای کانال @{args.channel}: {member_count:,}")
+                else:
+                    print(f"\n⚠️ تعداد اعضای کانال @{args.channel} یافت نشد.")
+            return
+
+        # رفتار عادی (غیر only_members)
         profile = None
         if args.download_profile:
             temp_profile = scraper.get_profile()
@@ -92,6 +116,10 @@ def main():
                 profile = temp_profile
 
         messages = scraper.get_latest_messages(count=args.num_messages)
+
+        member_count = None
+        if args.members:
+            member_count = scraper.get_member_count()
 
         if args.download:
             if not args.json:
@@ -129,6 +157,14 @@ def main():
             output_data = {"messages": [asdict(msg) for msg in messages]}
             if profile:
                 output_data["profile"] = asdict(profile)
+            if member_count is not None:
+                if "profile" not in output_data:
+                    output_data["profile"] = {}
+                output_data["profile"]["member_count"] = member_count
+            elif args.members:
+                if "profile" not in output_data:
+                    output_data["profile"] = {}
+                output_data["profile"]["member_count"] = None
 
             print(json.dumps(output_data, indent=2, ensure_ascii=False, default=str))
             return
@@ -141,6 +177,11 @@ def main():
                 print(f"   ⚠️ آدرس پیدا شد اما دانلود ناموفق بود: {profile.photo_url}")
             else:
                 print("   ❌ عکس پروفایلی یافت نشد.")
+
+        if member_count is not None:
+            print(f"\n👥 تعداد اعضای کانال @{args.channel}: {member_count:,}")
+        elif args.members:
+            print(f"\n⚠️ تعداد اعضای کانال @{args.channel} یافت نشد.")
 
         scraper.display_messages(messages)
 

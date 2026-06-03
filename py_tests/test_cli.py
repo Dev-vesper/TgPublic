@@ -73,3 +73,45 @@ def test_main_profile_without_photo_skips_progress(MockScraper):
             MockProgress.assert_not_called()
     
     mock_scraper.download_profile_photo.assert_not_called()
+
+@patch("tgpublic.cli.TelegramChannelScraper")
+def test_only_members_flag_json(mock_scraper_class, capsys):
+    mock_scraper = MagicMock()
+    mock_scraper.get_member_count.return_value = 42
+    mock_scraper_class.return_value = mock_scraper
+
+    test_args = ["prog", "testchan", "--only_members", "--json"]
+    with patch.object(sys, "argv", test_args):
+        cli.main()
+
+    captured = capsys.readouterr()
+    assert '"member_count": 42' in captured.out
+    mock_scraper.get_latest_messages.assert_not_called()
+    mock_scraper.download_profile_photo.assert_not_called()
+
+@patch("tgpublic.cli.TelegramChannelScraper")
+def test_only_members_flag_text(mock_scraper_class, capsys):
+    mock_scraper = MagicMock()
+    mock_scraper.get_member_count.return_value = 42
+    mock_scraper_class.return_value = mock_scraper
+
+    test_args = ["prog", "testchan", "--only_members"]
+    with patch.object(sys, "argv", test_args):
+        cli.main()
+
+    captured = capsys.readouterr()
+    assert "تعداد اعضای کانال @testchan: 42" in captured.out
+    mock_scraper.get_latest_messages.assert_not_called()
+
+@patch("tgpublic.cli.TelegramChannelScraper")
+def test_only_members_flag_not_found(mock_scraper_class, capsys):
+    mock_scraper = MagicMock()
+    mock_scraper.get_member_count.return_value = None
+    mock_scraper_class.return_value = mock_scraper
+
+    test_args = ["prog", "testchan", "--only_members"]
+    with patch.object(sys, "argv", test_args):
+        cli.main()
+
+    captured = capsys.readouterr()
+    assert "یافت نشد" in captured.out

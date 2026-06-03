@@ -1,3 +1,4 @@
+import requests
 from unittest.mock import MagicMock, patch
 
 from tgpublic.scraper import TelegramChannelScraper
@@ -66,3 +67,33 @@ def test_display_messages_handles_none_datetime(capsys):
     captured = capsys.readouterr()
     assert "زمان: None" not in captured.out
     assert "متن:" in captured.out
+
+@patch("tgpublic.scraper.requests.Session.get")
+def test_get_member_count_success(mock_get):
+    mock_response = MagicMock()
+    mock_response.text = '<div class="tgme_page_extra">128 subscribers</div>'
+    mock_response.status_code = 200
+    mock_get.return_value = mock_response
+
+    scraper = TelegramChannelScraper("test", "downloads")
+    count = scraper.get_member_count()
+    assert count == 128
+    mock_get.assert_called_once_with("https://t.me/test", timeout=15)
+
+@patch("tgpublic.scraper.requests.Session.get")
+def test_get_member_count_not_found(mock_get):
+    mock_response = MagicMock()
+    mock_response.text = "<html></html>"
+    mock_response.status_code = 200
+    mock_get.return_value = mock_response
+
+    scraper = TelegramChannelScraper("test", "downloads")
+    count = scraper.get_member_count()
+    assert count is None
+
+@patch("tgpublic.scraper.requests.Session.get")
+def test_get_member_count_request_error(mock_get):
+    mock_get.side_effect = requests.exceptions.ConnectionError("timeout")
+    scraper = TelegramChannelScraper("test", "downloads")
+    count = scraper.get_member_count()
+    assert count is None

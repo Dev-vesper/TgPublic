@@ -16,6 +16,7 @@ class ChannelProfile:
     channel_name: str
     photo_url: Optional[str] = None
     local_photo_path: Optional[Path] = None
+    member_count: Optional[int] = None
 
 
 @dataclass

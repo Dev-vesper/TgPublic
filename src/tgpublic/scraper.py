@@ -13,7 +13,7 @@ from tgpublic.config import (
 )
 from tgpublic.downloader import FileDownloader
 from tgpublic.models import ChannelProfile, Message
-from tgpublic.parsers import parse_messages, parse_profile_photo_url
+from tgpublic.parsers import parse_messages, parse_profile_photo_url, parse_member_count
 
 logger = logging.getLogger("tgpublic")
 
@@ -46,6 +46,23 @@ class TelegramChannelScraper:
         profile = ChannelProfile(channel_name=self.channel_name, photo_url=photo_url)
         logger.info("Profile parsed. Photo URL: %s", photo_url)
         return profile
+
+    def get_member_count(self) -> Optional[int]:
+        main_url = f"https://t.me/{self.channel_name}"
+        logger.info("Fetching member count from: %s", main_url)
+        try:
+            response = self.session.get(main_url, timeout=DEFAULT_REQUEST_TIMEOUT)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "lxml")
+            count = parse_member_count(soup)
+            if count is not None:
+                logger.info("Member count for @%s: %d", self.channel_name, count)
+            else:
+                logger.warning("Could not find member count for @%s", self.channel_name)
+            return count
+        except requests.RequestException as e:
+            logger.error("Failed to fetch member count for @%s: %s", self.channel_name, e)
+            return None
 
     def download_profile_photo(
         self,
