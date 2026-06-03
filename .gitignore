@@ -7,5 +7,6 @@ build/
 .venv/
 venv/
 downloads/
+all_downloads/
 .pytest_cache/
 *.log

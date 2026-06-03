@@ -44,5 +44,5 @@ tgpublic = "tgpublic.cli:main"
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["py_tests"]
 python_files = "test_*.py"
