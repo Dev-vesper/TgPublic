@@ -54,7 +54,9 @@ def _parse_single_message(widget: Tag) -> Message:
 def _extract_text(widget: Tag) -> str:
     text_element = widget.find("div", class_="tgme_widget_message_text")
     if text_element:
-        return text_element.get_text(strip=True)
+        raw_text = text_element.get_text(strip=False)
+        collapsed = re.sub(r'[ \t]+', ' ', raw_text)
+        return collapsed.strip()
     return ""
 
 

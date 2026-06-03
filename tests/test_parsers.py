@@ -26,6 +26,17 @@ SAMPLE_HTML = """
 </html>
 """
 
+HTML_WITH_NEWLINE = """
+<html>
+<body>
+    <div class="tgme_widget_message">
+        <div class="tgme_widget_message_text">خط اول\nخط دوم\n  خط سوم با فاصله  اضافی</div>
+        <a class="tgme_widget_message_date" href="/testchannel/12347"><time datetime="2025-01-03T10:00:00+00:00"/></a>
+    </div>
+</body>
+</html>
+"""
+
 
 def test_parse_profile_photo_url_from_meta():
     soup = BeautifulSoup(SAMPLE_HTML, "lxml")
@@ -90,3 +101,11 @@ def test_parse_messages_with_negative_count_returns_one_message():
     messages = parse_messages(soup, count=-5)
     assert len(messages) == 1
     assert messages[0].text == "پیام دوم"
+
+
+def test_parse_message_preserves_newlines():
+    soup = BeautifulSoup(HTML_WITH_NEWLINE, "lxml")
+    messages = parse_messages(soup, count=1)
+    assert len(messages) == 1
+    expected = "خط اول\nخط دوم\nخط سوم با فاصله اضافی"
+    assert messages[0].text == expected
