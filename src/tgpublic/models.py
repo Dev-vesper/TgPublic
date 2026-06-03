@@ -25,4 +25,5 @@ class Message:
     text: str = ""
     datetime_str: Optional[str] = None
     link: Optional[str] = None
+    views: Optional[int] = None
     attachments: list[Attachment] = field(default_factory=list)

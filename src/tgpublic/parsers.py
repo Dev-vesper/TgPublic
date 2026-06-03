@@ -56,6 +56,7 @@ def _parse_single_message(widget: Tag) -> Message:
     text = _extract_text(widget)
     message_id, message_link = _extract_id_and_link(widget)
     datetime_str = _extract_datetime(widget)
+    views = _extract_views_count(widget)
     attachments = _extract_attachments(widget)
 
     return Message(
@@ -63,6 +64,7 @@ def _parse_single_message(widget: Tag) -> Message:
         text=text,
         datetime_str=datetime_str,
         link=message_link,
+        views=views,
         attachments=attachments,
     )
 
@@ -113,6 +115,36 @@ def _extract_datetime(widget: Tag) -> Optional[str]:
     if time_element and time_element.has_attr("datetime"):
         return time_element["datetime"]
     return None
+
+
+def _extract_views_count(widget: Tag) -> Optional[int]:
+    if widget.name == 'span' and 'tgme_widget_message_views' in widget.get('class', []):
+        views_span = widget
+    else:
+        views_span = widget.find("span", class_="tgme_widget_message_views")
+    
+    if not views_span:
+        return None
+    
+    text = views_span.get_text(strip=True)
+    text_upper = text.upper()
+    multiplier = 1
+    
+    if text_upper.endswith('K'):
+        multiplier = 1000
+        text = text_upper[:-1]
+    elif text_upper.endswith('M'):
+        multiplier = 1000000
+        text = text_upper[:-1]
+    
+    try:
+        if '.' in text:
+            value = float(text)
+        else:
+            value = int(text)
+        return int(value * multiplier)
+    except ValueError:
+        return None
 
 
 def _extract_attachments(widget: Tag) -> list[Attachment]:

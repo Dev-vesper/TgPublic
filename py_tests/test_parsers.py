@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from tgpublic.parsers import parse_messages, parse_profile_photo_url, parse_member_count
+from tgpublic.parsers import parse_messages, parse_profile_photo_url, parse_member_count, _extract_views_count
 
 
 SAMPLE_HTML = """
@@ -150,3 +150,26 @@ def test_parse_member_count_other_text():
     html = '<div class="tgme_page_extra">Joined December 2020</div>'
     soup = BeautifulSoup(html, "lxml")
     assert parse_member_count(soup) is None
+
+def test_extract_views_count():
+    html = '<span class="tgme_widget_message_views">5.62K</span>'
+    soup = BeautifulSoup(html, "lxml")
+    views = _extract_views_count(soup.find("span"))
+    assert views == 5620
+
+def test_extract_views_count_simple():
+    html = '<span class="tgme_widget_message_views">1234</span>'
+    soup = BeautifulSoup(html, "lxml")
+    views = _extract_views_count(soup.find("span"))
+    assert views == 1234
+
+def test_extract_views_count_million():
+    html = '<span class="tgme_widget_message_views">1.2M</span>'
+    soup = BeautifulSoup(html, "lxml")
+    views = _extract_views_count(soup.find("span"))
+    assert views == 1200000
+
+def test_extract_views_count_missing():
+    soup = BeautifulSoup("<div></div>", "lxml")
+    views = _extract_views_count(soup)
+    assert views is None

@@ -75,10 +75,10 @@ def test_get_member_count_success(mock_get):
     mock_response.status_code = 200
     mock_get.return_value = mock_response
 
-    scraper = TelegramChannelScraper("test", "downloads")
+    scraper = TelegramChannelScraper("python", "downloads")
     count = scraper.get_member_count()
     assert count == 128
-    mock_get.assert_called_once_with("https://t.me/test", timeout=15)
+    mock_get.assert_called_once_with("https://t.me/python", timeout=15)
 
 @patch("tgpublic.scraper.requests.Session.get")
 def test_get_member_count_not_found(mock_get):

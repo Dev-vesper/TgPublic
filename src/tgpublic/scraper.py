@@ -127,6 +127,8 @@ class TelegramChannelScraper:
                     print(f"زمان: {dt_local.strftime('%Y-%m-%d %H:%M:%S')}")
                 except ValueError:
                     print(f"زمان: {message.datetime_str}")
+            if message.views is not None:
+                print(f"👁️ بازدیدها: {message.views:,}")
             print(f"متن:\n{message.text or '[بدون متن]'}")
             if message.link:
                 print(f"لینک: {message.link}")
