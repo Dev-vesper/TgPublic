@@ -55,8 +55,13 @@ def _extract_text(widget: Tag) -> str:
     text_element = widget.find("div", class_="tgme_widget_message_text")
     if text_element:
         raw_text = text_element.get_text(strip=False)
-        collapsed = re.sub(r'[ \t]+', ' ', raw_text)
-        return collapsed.strip()
+        lines = raw_text.splitlines()
+        processed_lines = []
+        for line in lines:
+            collapsed = re.sub(r'[ \t]+', ' ', line)
+            stripped = collapsed.strip()
+            processed_lines.append(stripped)
+        return '\n'.join(processed_lines)
     return ""
 
 
