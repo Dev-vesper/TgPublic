@@ -52,10 +52,10 @@ def test_get_latest_messages(mock_get):
 def test_scraper_context_manager_closes_session():
     scraper = TelegramChannelScraper("test", "downloads")
     session = scraper.session
-    assert not session.__dict__.get("closed", False)
-    with scraper:
-        pass
-    assert session.__dict__.get("closed", False)
+    with patch.object(session, "close") as mock_close:
+        with scraper:
+            pass
+        mock_close.assert_called_once()
 
 
 def test_display_messages_handles_none_datetime(capsys):

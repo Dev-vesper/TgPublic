@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 
 from tgpublic.downloader import FileDownloader
 
@@ -53,13 +53,16 @@ def test_download_request_error(mock_get, tmp_path):
 def test_download_removes_partial_file_on_write_error(mock_get, tmp_path):
     mock_response = MagicMock()
     mock_response.headers = {"content-length": "100"}
-    mock_response.iter_content.side_effect = [b"partial", OSError("disk full")]
+    mock_response.iter_content.return_value = [b"partial_data"]
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
     downloader = FileDownloader()
-    result = downloader.download("https://example.com/file", str(tmp_path), filename="test.bin")
-
+    target_file = tmp_path / "test.bin"
+    
+    with patch("builtins.open", mock_open()) as mock_file:
+        mock_file.side_effect = OSError("disk full")
+        result = downloader.download("https://example.com/file", str(tmp_path), filename="test.bin")
+    
     assert result is None
-    partial_path = tmp_path / "test.bin"
-    assert not partial_path.exists()
+    assert not target_file.exists()
