@@ -53,16 +53,35 @@ def _parse_single_message(widget: Tag) -> Message:
 
 def _extract_text(widget: Tag) -> str:
     text_element = widget.find("div", class_="tgme_widget_message_text")
-    if text_element:
-        raw_text = text_element.get_text(strip=False)
-        lines = raw_text.splitlines()
-        processed_lines = []
-        for line in lines:
-            collapsed = re.sub(r'[ \t]+', ' ', line)
-            stripped = collapsed.strip()
-            processed_lines.append(stripped)
-        return '\n'.join(processed_lines)
-    return ""
+    if not text_element:
+        return ""
+
+    def _extract_inner(element):
+        parts = []
+        for child in element.children:
+            if isinstance(child, str):
+                # collapse multiple spaces/tabs in text nodes
+                collapsed = re.sub(r'[ \t]+', ' ', child)
+                parts.append(collapsed)
+            elif child.name == 'br':
+                parts.append('\n')
+            elif child.name in ['a', 'span', 'strong', 'em']:
+                # recursively extract inside inline tags
+                parts.append(_extract_inner(child))
+            else:
+                # other tags: just extract text without adding extra separators
+                parts.append(_extract_inner(child))
+        return ''.join(parts)
+
+    raw_text = _extract_inner(text_element)
+    # Split by newline to strip per line, then re-join
+    lines = [line.strip() for line in raw_text.split('\n')]
+    # Remove empty lines from start/end but keep internal empty lines if any
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+    return '\n'.join(lines)
 
 
 def _extract_id_and_link(widget: Tag) -> tuple[Optional[str], Optional[str]]:

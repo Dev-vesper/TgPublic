@@ -37,7 +37,18 @@ HTML_WITH_NEWLINE = """
 </html>
 """
 
-
+HTML_WITH_BR_TAGS = """
+<html>
+<body>
+    <div class="tgme_widget_message">
+        <div class="tgme_widget_message_text">
+            ایران عالیه<br/>نصب کنید
+        </div>
+        <a class="tgme_widget_message_date" href="/test/1"><time datetime="2025-01-01"/></a>
+    </div>
+</body>
+</html>
+"""
 def test_parse_profile_photo_url_from_meta():
     soup = BeautifulSoup(SAMPLE_HTML, "lxml")
     url = parse_profile_photo_url(soup)
@@ -109,3 +120,9 @@ def test_parse_message_preserves_newlines():
     assert len(messages) == 1
     expected = "خط اول\nخط دوم\nخط سوم با فاصله اضافی"
     assert messages[0].text == expected
+
+def test_parse_message_with_br_tags():
+    soup = BeautifulSoup(HTML_WITH_BR_TAGS, "lxml")
+    messages = parse_messages(soup, count=1)
+    assert len(messages) == 1
+    assert messages[0].text == "ایران عالیه\nنصب کنید"
