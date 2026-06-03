@@ -27,6 +27,12 @@ class TelegramChannelScraper:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
     def fetch_page_soup(self) -> BeautifulSoup:
         logger.info("Fetching page: %s", self.page_url)
         response = self.session.get(self.page_url, timeout=DEFAULT_REQUEST_TIMEOUT)

@@ -73,38 +73,56 @@ def main():
 
         profile = None
         if args.download_profile:
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            ) as progress:
-                task = progress.add_task("[cyan]Downloading profile photo...", total=None)
-                profile = scraper.download_profile_photo(
-                    progress_callback=lambda d, t: progress.update(task, completed=d, total=t)
-                )
+            temp_profile = scraper.get_profile()
+            if temp_profile.photo_url:
+                if not args.json:
+                    with Progress(
+                        SpinnerColumn(),
+                        TextColumn("[progress.description]{task.description}"),
+                        BarColumn(),
+                        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                    ) as progress:
+                        task = progress.add_task("[cyan]Downloading profile photo...", total=None)
+                        profile = scraper.download_profile_photo(
+                            progress_callback=lambda d, t: progress.update(task, completed=d, total=t)
+                        )
+                else:
+                    profile = scraper.download_profile_photo()
+            else:
+                profile = temp_profile
 
         messages = scraper.get_latest_messages(count=args.num_messages)
 
         if args.download:
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            ) as progress:
+            if not args.json:
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    BarColumn(),
+                    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                ) as progress:
+                    for msg in messages:
+                        for att in msg.attachments:
+                            task = progress.add_task(
+                                f"[cyan]Downloading {att.filename}", total=None
+                            )
+                            local_path = scraper.downloader.download(
+                                att.url,
+                                scraper.output_dir,
+                                filename=att.filename,
+                                progress_callback=lambda d, t, task=task: progress.update(
+                                    task, completed=d, total=t
+                                ),
+                            )
+                            if local_path is None:
+                                progress.update(task, completed=1, total=1)
+            else:
                 for msg in messages:
                     for att in msg.attachments:
-                        task = progress.add_task(
-                            f"[cyan]Downloading {att.filename}", total=None
-                        )
                         scraper.downloader.download(
                             att.url,
                             scraper.output_dir,
                             filename=att.filename,
-                            progress_callback=lambda d, t, task=task: progress.update(
-                                task, completed=d, total=t
-                            ),
                         )
 
         if args.json:
@@ -140,9 +158,12 @@ def main():
 
 def _silence_console_logging():
     logger = logging.getLogger("tgpublic")
-    logger.handlers.clear()
-    logger.addHandler(logging.StreamHandler(sys.stderr))
-    logger.setLevel(logging.WARNING)
+    for handler in logger.handlers[:]:
+        if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+            logger.removeHandler(handler)
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.setLevel(logging.WARNING)
+    logger.addHandler(stderr_handler)
 
 
 if __name__ == "__main__":

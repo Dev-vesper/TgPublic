@@ -76,3 +76,17 @@ def test_parse_messages_empty():
     soup = BeautifulSoup("<html></html>", "lxml")
     messages = parse_messages(soup, count=2)
     assert messages == []
+
+
+def test_parse_messages_with_zero_count_returns_one_message():
+    soup = BeautifulSoup(SAMPLE_HTML, "lxml")
+    messages = parse_messages(soup, count=0)
+    assert len(messages) == 1
+    assert messages[0].text == "پیام دوم"
+
+
+def test_parse_messages_with_negative_count_returns_one_message():
+    soup = BeautifulSoup(SAMPLE_HTML, "lxml")
+    messages = parse_messages(soup, count=-5)
+    assert len(messages) == 1
+    assert messages[0].text == "پیام دوم"

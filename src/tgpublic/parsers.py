@@ -25,7 +25,8 @@ def parse_messages(soup: BeautifulSoup, count: int) -> list[Message]:
     if not message_widgets:
         return []
 
-    target_widgets = message_widgets[-count:]
+    effective_count = max(1, min(count, len(message_widgets)))
+    target_widgets = message_widgets[-effective_count:]
     messages = []
 
     for widget in target_widgets:

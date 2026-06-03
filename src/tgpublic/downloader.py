@@ -24,6 +24,7 @@ class FileDownloader:
         filename: Optional[str] = None,
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> Optional[Path]:
+        local_path = None
         try:
             response = requests.get(
                 url,
@@ -55,8 +56,10 @@ class FileDownloader:
                             progress_callback(downloaded, total_size)
                 if progress_callback and total_size == 0:
                     progress_callback(downloaded, downloaded)
-        except OSError as e:
+        except (requests.RequestException, OSError) as e:
             logger.error("Failed writing file %s: %s", local_path, e)
+            if local_path and local_path.exists():
+                local_path.unlink()
             return None
 
         return local_path

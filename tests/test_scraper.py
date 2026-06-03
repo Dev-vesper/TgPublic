@@ -47,3 +47,22 @@ def test_get_latest_messages(mock_get):
     assert messages[0].text == "Test message"
     assert messages[0].message_id == "100"
     assert len(messages[0].attachments) == 1
+
+
+def test_scraper_context_manager_closes_session():
+    scraper = TelegramChannelScraper("test", "downloads")
+    session = scraper.session
+    assert not session.__dict__.get("closed", False)
+    with scraper:
+        pass
+    assert session.__dict__.get("closed", False)
+
+
+def test_display_messages_handles_none_datetime(capsys):
+    from tgpublic.models import Message
+    scraper = TelegramChannelScraper("test", "downloads")
+    msg = Message(message_id="1", text="hello", datetime_str=None, link=None)
+    scraper.display_messages([msg])
+    captured = capsys.readouterr()
+    assert "زمان: None" not in captured.out
+    assert "متن:" in captured.out
