@@ -168,6 +168,9 @@ def _extract_attachments(widget: Tag) -> list[Attachment]:
 def _find_image_attachments(widget: Tag) -> list[Attachment]:
     attachments = []
     for img in widget.find_all("img"):
+        if img.find_parent(class_="tgme_widget_message_user_photo"):
+            continue
+
         if not img.has_attr("src"):
             continue
         url = _normalize_url(img["src"])
@@ -180,13 +183,26 @@ def _find_image_attachments(widget: Tag) -> list[Attachment]:
 
 def _find_video_attachments(widget: Tag) -> list[Attachment]:
     attachments = []
-    for video in widget.find_all("video"):
-        if not video.has_attr("src"):
-            continue
-        url = _normalize_url(video["src"])
-        parsed = urllib.parse.urlparse(url)
-        filename = Path(parsed.path).name or f"video_{len(attachments)}.mp4"
-        attachments.append(Attachment(type="video", url=url, filename=filename))
+    seen_urls = set()
+
+    video_elem = widget.find("video", class_="tgme_widget_message_video")
+    if video_elem and video_elem.has_attr("src"):
+        url = _normalize_url(video_elem["src"])
+        filename = Path(urllib.parse.urlparse(url).path).name or f"video_{len(attachments)}.mp4"
+        if url not in seen_urls:
+            attachments.append(Attachment(type="video", url=url, filename=filename))
+            seen_urls.add(url)
+
+    thumb_elem = widget.find("i", class_="tgme_widget_message_video_thumb")
+    if thumb_elem and thumb_elem.has_attr("style"):
+        match = re.search(r"background-image:\s*url\(['\"]?([^'\"]+)['\"]?\)", thumb_elem["style"])
+        if match:
+            url = _normalize_url(match.group(1))
+            filename = f"thumbnail_{len(attachments)}.jpg"
+            if url not in seen_urls:
+                attachments.append(Attachment(type="image", url=url, filename=filename))
+                seen_urls.add(url)
+
     return attachments
 
 
