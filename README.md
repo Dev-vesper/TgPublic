@@ -1,100 +1,100 @@
 # TgPublic
 
-ابزار خط فرمان برای استخراج داده از کانال‌های عمومی تلگرام (بدون نیاز به API رسمی).  
-با TgPublic می‌توانید:
+Command-line tool for extracting data from public Telegram channels (without requiring the official API).  
+With TgPublic you can:
 
-- دریافت آخرین پیام‌های یک کانال عمومی به همراه متن، زمان، لینک و تعداد بازدید
-- دانلود خودکار تمام پیوست‌ها (تصویر، ویدیو، سند)
-- دریافت آدرس و دانلود عکس پروفایل کانال
-- مشاهده تعداد اعضای کانال (از صفحه اصلی تلگرام)
-- خروجی JSON برای پردازش در دیگر ابزارها
+- Retrieve the latest messages from a public channel, including text, timestamp, link, and view count
+- Automatically download all attachments (images, videos, documents)
+- Get the channel profile picture URL and download it
+- View the channel member count (from the Telegram main page)
+- Output in JSON format for processing in other tools
 
 ---
 
-## نصب
+## Installation
 
-### پیش‌نیازها
-- Python 3.9 یا بالاتر
+### Prerequisites
+- Python 3.9 or higher
 - pip
 
-### نصب از روی مخزن (برای آخرین تغییرات)
+### Install from repository (for latest changes)
 ```bash
 git clone https://github.com/Dev-vesper/TgPublic.git
 cd TgPublic
 pip install -e .
 ```
 
-### نصب با وابستگی‌های توسعه (برای اجرای تست)
+### Install with development dependencies (for running tests)
 ```bash
 pip install -e ".[dev]"
 ```
 
 ---
 
-## راهنمای استفاده سریع
+## Quick Start Guide
 
 ```bash
 tgpublic CHANNEL_NAME [OPTIONS]
 ```
 
-- `CHANNEL_NAME`: نام کانال بدون `@` (مثال: `NovScript`)
+- `CHANNEL_NAME`: channel name without `@` (example: `NovScript`)
 
-### دریافت ۵ پیام آخر
+### Get the last 5 messages
 ```bash
 tgpublic NovScript -n 5
 ```
 
-### دریافت پیام‌ها به همراه دانلود فایل‌های پیوست
+### Get messages and download attachments
 ```bash
 tgpublic NovScript -n 3 --download
 ```
 
-### دریافت عکس پروفایل کانال
+### Download channel profile picture
 ```bash
 tgpublic NovScript --download-profile
 ```
 
-### مشاهده تعداد اعضا (همراه با پیام‌ها)
+### Show member count (along with messages)
 ```bash
 tgpublic NovScript --members
 ```
 
-### فقط دریافت تعداد اعضا (بدون پیام و دانلود)
+### Get only member count (no messages or downloads)
 ```bash
 tgpublic NovScript --only_members
 ```
 
-### دریافت خروجی JSON (برای پردازش با اسکریپت)
+### Get JSON output (for script processing)
 ```bash
 tgpublic NovScript -n 10 --json
 ```
 
-### ترکیب چند گزینه
+### Combine multiple options
 ```bash
 tgpublic NovScript -n 5 --download --download-profile --members -o my_downloads
 ```
 
 ---
 
-## توضیح کامل گزینه‌ها
+## Detailed Options
 
-| گزینه | توضیح |
-|-------|-------|
-| `channel` | نام کانال تلگرام (بدون `@`). اگر وارد نشود، برنامه از شما می‌پرسد. |
-| `-n`, `--num-messages` | تعداد آخرین پیام‌های مورد نظر (پیش‌فرض: ۲). |
-| `-d`, `--download` | دانلود تمام فایل‌های پیوست پیام‌ها (تصاویر، ویدیوها، اسناد). |
-| `--download-profile` | دانلود عکس پروفایل کانال و ذخیره با نام `{channel}_profile.jpg`. |
-| `--members` | نمایش تعداد اعضای کانال (نیاز به یک درخواست جداگانه به `t.me/{channel}` دارد). |
-| `--only_members` | فقط تعداد اعضا را دریافت کند و هیچ پیام یا دانلودی انجام ندهد. |
-| `-o`, `--output` | مسیر پوشه ذخیره فایل‌های دانلودی (پیش‌فرض: `downloads/`). |
-| `--json` | خروجی را به صورت JSON خام چاپ کند (مناسب برای پردازش خودکار). |
-| `-h`, `--help` | نمایش راهنما. |
+| Option | Description |
+|--------|-------------|
+| `channel` | Telegram channel name (without `@`). If not provided, the program will prompt you. |
+| `-n`, `--num-messages` | Number of latest messages to retrieve (default: 2). |
+| `-d`, `--download` | Download all message attachments (images, videos, documents). |
+| `--download-profile` | Download channel profile picture and save as `{channel}_profile.jpg`. |
+| `--members` | Show channel member count (requires a separate request to `t.me/{channel}`). |
+| `--only_members` | Retrieve only the member count; do not fetch messages or downloads. |
+| `-o`, `--output` | Directory path for saving downloaded files (default: `downloads/`). |
+| `--json` | Print output as raw JSON (suitable for automated processing). |
+| `-h`, `--help` | Show help. |
 
 ---
 
-## خروجی نمونه
+## Sample Output
 
-### حالت عادی (بدون `--json`)
+### Normal mode (without `--json`)
 ```
 ████████╗  ██████╗  ██████╗  ██╗   ██╗ ██████╗  ██╗      ██╗  ██████╗
 ╚══██╔══╝ ██╔════╝  ██╔══██╗ ██║   ██║ ██╔══██╗ ██║      ██║ ██╔════╝
@@ -103,27 +103,27 @@ tgpublic NovScript -n 5 --download --download-profile --members -o my_downloads
    ██║    ╚██████╔╝ ██║      ╚██████╔╝ ██████╔╝ ███████╗ ██║ ╚██████╗
    ╚═╝     ╚═════╝  ╚═╝       ╚═════╝  ╚═════╝  ╚══════╝ ╚═╝  ╚═════╝
 
-👥 تعداد اعضای کانال @NovScript: 32
+👥 Member count for @NovScript: 32
 
 ============================================================
-📨 پیام 1
-شناسه: 154
-زمان: 2026-05-27 20:44:02
-👁️ بازدیدها: 1,234
-متن:
-ماشالا سطح برنامه نویسامون انقدر رفته بالا که هرجور پروژه به ذهنم میاد یکی 10 لول بهترش رو پابلیک کرده گیتهاب
-لینک: https://t.me/NovScript/154
-📎 پیوست‌ها (1 عدد):
+📨 Message 1
+ID: 154
+Time: 2026-05-27 20:44:02
+👁️ Views: 1,234
+Text:
+Mashallah, the level of our programmers has gone so high that for any project that comes to mind, someone has already published something 10 levels better on GitHub.
+Link: https://t.me/NovScript/154
+📎 Attachments (1):
    ✅ DZdcjLQDv_guPZzsH_fn1_XJZmB9yUDQuYvCmJg1HOiVuN-yfRtOHjIBkPc3sxCvPYL4gSMI8LydPwCneEi9JgAyA8cuMy4aTdK7SHt91lSwEJD7jTSuxH6JDEcUUfTMG1TGtdejY-F6JIriC3aWOFLYF46T4rhdNmscatoQ0UkzMfvBug5nkx6-wyA2nQzG3CLu36ZZ1RdHhw26haahAil75xAUw9phonnki6Kd6rq8U9ARc5KggDLbR0HKuy4-ZQ7nhveX0gzfJQ5s8wnp3adAQJHdB3nBq8t372CC4kyaI-6bsrs5D3OL9QvC0HOMAR-HG-D3JzgBpB1ZhNcs4Q.jpg (image)
-      مسیر: downloads\DZdcjLQDv_guPZzsH_fn1_XJZmB9yUDQuYvCmJg1HOiVuN-yfRtOHjIBkPc3sxCvPYL4gSMI8LydPwCneEi9JgAyA8cuMy4aTdK7SHt91lSwEJD7jTSuxH6JDEcUUfTMG1TGtdejY-F6JIriC3aWOFLYF46T4rhdNmscatoQ0UkzMfvBug5nkx6-wyA2nQzG3CLu36ZZ1RdHhw26haahAil75xAUw9phonnki6Kd6rq8U9ARc5KggDLbR0HKuy4-ZQ7nhveX0gzfJQ5s8wnp3adAQJHdB3nBq8t372CC4kyaI-6bsrs5D3OL9QvC0HOMAR-HG-D3JzgBpB1ZhNcs4Q.jpg
+      Path: downloads\DZdcjLQDv_guPZzsH_fn1_XJZmB9yUDQuYvCmJg1HOiVuN-yfRtOHjIBkPc3sxCvPYL4gSMI8LydPwCneEi9JgAyA8cuMy4aTdK7SHt91lSwEJD7jTSuxH6JDEcUUfTMG1TGtdejY-F6JIriC3aWOFLYF46T4rhdNmscatoQ0UkzMfvBug5nkx6-wyA2nQzG3CLu36ZZ1RdHhw26haahAil75xAUw9phonnki6Kd6rq8U9ARc5KggDLbR0HKuy4-ZQ7nhveX0gzfJQ5s8wnp3adAQJHdB3nBq8t372CC4kyaI-6bsrs5D3OL9QvC0HOMAR-HG-D3JzgBpB1ZhNcs4Q.jpg
 ...
 ```
 
-### حالت JSON
+### JSON mode
 ```bash
 tgpublic NovScript --only_members --json
 ```
-خروجی:
+Output:
 ```json
 {
   "profile": {
@@ -134,59 +134,59 @@ tgpublic NovScript --only_members --json
 
 ---
 
-## لاگ‌ها و خطاها
+## Logging and Errors
 
-- تمام لاگ‌ها با سطح `INFO` در کنسول نمایش داده می‌شوند.
-- خطاهای جدی در فایل `tgpublic_errors.log` ذخیره می‌شوند (حداکثر ۵ مگابایت، ۳ نسخه چرخشی).
-- اگر خطای غیرمنتظره رخ دهد، یک کد ۶ رقمی نمایش داده می‌شود که می‌توانید برای عیب‌یابی از فایل خطا استفاده کنید.
+- All logs are shown in the console at `INFO` level.
+- Serious errors are saved in `tgpublic_errors.log` (max 5 MB, with 3 rotating backups).
+- If an unexpected error occurs, a 6-digit code is displayed. You can use this code for troubleshooting by checking the error log.
 
 ---
 
-## توسعه و مشارکت
+## Development and Contribution
 
-### اجرای تست‌ها
+### Running tests
 ```bash
 pytest
 ```
 
-### ساختار پروژه
+### Project structure
 ```
 tgpublic/
 ├── src/tgpublic/
-│   ├── cli.py           # نقطه ورود خط فرمان
-│   ├── scraper.py       # کلاس اصلی استخراج‌کننده
-│   ├── parsers.py       # پارسینگ HTML با BeautifulSoup
-│   ├── downloader.py    # دانلود فایل با قابلیت resume (جزئی)
-│   ├── models.py        # مدل‌های داده (Message, Attachment, ...)
-│   ├── config.py        # ثابت‌ها (URLها، timeout, ...)
-│   ├── logging_config.py # پیکربندی لاگ
-│   └── display.py       # نمایش بنر و خطاهای رنگی
-├── py_tests/            # تست‌های واحد (با pytest)
-├── tests/               # اسکریپت‌های تست دستی (اختیاری)
-└── pyproject.toml       # تنظیمات پروژه و وابستگی‌ها
+│   ├── cli.py           # Command-line entry point
+│   ├── scraper.py       # Main scraper class
+│   ├── parsers.py       # HTML parsing with BeautifulSoup
+│   ├── downloader.py    # File downloader with resume support (partial)
+│   ├── models.py        # Data models (Message, Attachment, ...)
+│   ├── config.py        # Constants (URLs, timeout, ...)
+│   ├── logging_config.py # Logging configuration
+│   └── display.py       # Banner and colored error display
+├── py_tests/            # Unit tests (with pytest)
+├── tests/               # Manual test scripts (optional)
+└── pyproject.toml       # Project settings and dependencies
 ```
 
-### افزودن قابلیت جدید
-1. در صورت نیاز، مدل را در `models.py` به‌روزرسانی کنید.
-2. تابع پارسینگ را در `parsers.py` بنویسید.
-3. متد مربوطه را به `TelegramChannelScraper` اضافه کنید.
-4. گزینه خط فرمان را در `cli.py` تعریف کنید.
-5. تست واحد بنویسید و با `pytest` تأیید کنید.
+### Adding a new feature
+1. Update the model in `models.py` if needed.
+2. Write the parsing function in `parsers.py`.
+3. Add the corresponding method to `TelegramChannelScraper`.
+4. Define the command-line option in `cli.py`.
+5. Write unit tests and verify with `pytest`.
 
 ---
 
-## مجوز
+## License
 
-این پروژه تحت مجوز **MIT** منتشر شده است (فایل `LICENSE` را ببینید).
-
----
-
-## تماس و مشارکت
-
-- توسعه‌دهنده: [Dev-vesper](https://github.com/Dev-vesper)
-- برای گزارش مشکل یا پیشنهاد، یک **Issue** در مخزن گیت‌هاب باز کنید.
-- مشارکت از طریق Pull Request با استقبال روبرو می‌شود.
+This project is released under the **MIT** license (see `LICENSE` file).
 
 ---
 
-**TgPublic** – استخراج ساده و سریع از کانال‌های عمومی تلگرام، بدون نیاز به API و احراز هویت.
+## Contact and Contribution
+
+- Developer: [Dev-vesper](https://github.com/Dev-vesper)
+- To report an issue or suggest a feature, open an **Issue** on the GitHub repository.
+- Contributions via Pull Request are welcome.
+
+---
+
+**TgPublic** – Simple and fast extraction from public Telegram channels, without needing API or authentication.
